@@ -33,9 +33,7 @@ void Munge8(void *data, uint64_t size ) {
 int main(int argc, char** argv) {
     // megabyes, runs
     int megabytes = atoi(argv[1]);
-    printf("%s\n", argv[1]);
     int trialRuns = atoi(argv[2]);
-    printf("%s\n", argv[1]);
 
     unsigned long bytes = megabytes * ONE_MEGABYTE;
     
