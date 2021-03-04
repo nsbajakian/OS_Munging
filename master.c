@@ -9,8 +9,6 @@
  * 
  */
 
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,12 +23,12 @@
 // colors are nice
 #define KRED  "\x1B[31m"
 
-#define ONE_MEGABYTE 10000000
-#define TEN_MEGABYTES 10000000
-#define ONE_HUNDRED_MEGABYTES 100000000
-#define ONE_GIGABYTE 1000000000
-#define TEN_GIGABYTES 10000000000
-#define ONE_BILLION  1000000000L;
+#define ONE_MEGABYTE 1000000L
+#define TEN_MEGABYTES 10000000L
+#define ONE_HUNDRED_MEGABYTES 100000000L
+#define ONE_GIGABYTE 1000000000L
+#define TEN_GIGABYTES 10000000000L
+#define ONE_BILLION  1000000000L
 
 #define NUM_WORD_TESTS 4 ///< Number of mx.c files/executables to run. (May add m128 later)
 

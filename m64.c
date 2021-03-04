@@ -18,7 +18,7 @@
 #include <sched.h>
 
 #define KRED  "\x1B[31m"
-#define ONE_MEGABYTE 10000000L
+#define ONE_MEGABYTE 1000000L
 
 void Munge64( void *data, uint64_t size ) {
     double *data64 = (double*) data;
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    unsigned long bytes = megabytes * ONE_MEGABYTE;
+    uint64_t bytes = megabytes * ONE_MEGABYTE;
     
     void *data = malloc(bytes);
     void *orig = data;

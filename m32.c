@@ -18,7 +18,7 @@
 #include <sched.h>
 
 #define KRED  "\x1B[31m"
-#define ONE_MEGABYTE 10000000L
+#define ONE_MEGABYTE 1000000L
 
 void Munge32( void *data, uint64_t size ) {
     uint32_t *data32 = (uint32_t*) data;
