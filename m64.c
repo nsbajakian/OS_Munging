@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
     FILE *fp;
     fp = fopen("m64.csv", "w+");
     fprintf(fp, "Alignment, AvgTime\n");
+    printf("	[Child, PID: %d]: ", getpid());
     printf("Running on core: %d\n", sched_getcpu());
     for(i=0;i<64;i++) {
         long elapsed_time, sum = 0;

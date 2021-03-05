@@ -21,34 +21,85 @@
 #include <stdbool.h>	// booleans
 #include <sys/wait.h>	// wait
 #include <sys/types.h>	// wait
+#include <argp.h>		// used by argument parser
 
 // colors are nice
 #define KRED  "\x1B[31m"
-
-#define ONE_MEGABYTE 10000000
-#define TEN_MEGABYTES 10000000
-#define ONE_HUNDRED_MEGABYTES 100000000
-#define ONE_GIGABYTE 1000000000
-#define TEN_GIGABYTES 10000000000
 #define ONE_BILLION  1000000000L;
-
 #define NUM_WORD_TESTS 4 ///< Number of mx.c files/executables to run. (May add m128 later)
+
+
+const char *argp_program_version = "munge v0.2";
+const char *argp_program_bug_address = "nsbajakian@wpi.edu";
+static char doc[] = "TODO: program description here";
+// static char args_doc[] = "[master.c]...";
+
+static struct argp_option options[] = { 
+    { "serial", 's', 0, 0, "Execute munging benchmarks serially."},
+    { "parallel", 'p', 0, 0, "Execute munging benchmarks in parallel."},
+	{ "megabytes", 'm', "NUM_MEGABYTES", 0, "Number of megabytes to run with."},
+	{ "runs", 'r', "NUM_RUNS", 0, "Number of runs to execute."},
+    { 0 } 
+};
+
+struct arguments {
+	enum { SERIAL, PARALLEL } mode;
+	int megabytes;
+	int trialRuns;
+};
+
+static error_t parse_opt(int key, char* arg, struct argp_state* state) {
+	struct arguments* arguments = state->input;
+	switch (key) {
+	case 's': arguments->mode = SERIAL; break;
+	case 'p': arguments->mode = PARALLEL; break;
+	case 'm': {
+		if(arg == NULL) {
+			printf("No megabytes value supplied, using default 10MB.\n");
+			arguments->megabytes = 11;
+			break;
+		}
+		else {
+			arguments->megabytes = atoi(arg); break;
+		}
+	}
+	case 'r': {
+		if(arg == NULL) {
+			printf("No number of runs supplied, using default 10 runs\n");
+			arguments->trialRuns = 11;
+			break;
+		}
+		else {
+			arguments->trialRuns = atoi(arg); 
+			break;
+		}
+	}
+	case ARGP_KEY_ARG: return 0;
+	default: return ARGP_ERR_UNKNOWN;
+	}
+	return 0;
+}	
+
+static struct argp argp = { options, parse_opt, NULL, doc, 0, 0, 0 };
 
 bool areAllDone(bool childState[]);
 
-int main(int argc, char** argv) {
-    // megabytes for trial, runs
+int main(int argc, char **argv) {
+    // argv: megabytes for trial, runs
+	struct arguments arguments;
+	arguments.mode = PARALLEL;	// Set default mode to parallel execution
+	arguments.megabytes = 10;
+	arguments.trialRuns = 10;
+	
+	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-    if(argc != 3) { // Incorrect number of arguments presented
-        if(argc < 3)
-            printf(KRED "Not enough arguments supplied\n");
-        if(argc > 3)
-            printf(KRED "Too many arguments supplied\n");
-        return EXIT_FAILURE;
-    }
+	if(arguments.mode == PARALLEL)
+		puts("Mode: Parallel");
+	if(arguments.mode == SERIAL)
+		puts("Mode: Serial");
 
-    int megabytes = atoi(argv[1]);
-    int trialRuns = atoi(argv[2]);
+	int megabytes = arguments.megabytes;
+	int trialRuns = arguments.trialRuns;
 
     if(megabytes < 1) {
         printf(KRED "Must input positive number of megabytes for test\n");
@@ -63,7 +114,7 @@ int main(int argc, char** argv) {
     int valid = 0;
     char s = 0;
     while(!valid) {
-        printf("About to start %d runs of %d Megabytes each. ", trialRuns, megabytes);
+        printf("About to average %d runs of %d Megabytes each. ", trialRuns, megabytes);
         printf("Continue? [y/n]\n");
         scanf("%s", &s);
         if(s == 'y' || s == 'n')
@@ -90,14 +141,14 @@ int main(int argc, char** argv) {
 
     // Start race clock
 	if (clock_gettime(CLOCK_REALTIME, &absStart) == -1) {
-		perror("clock gettime");
+		perror("error in clock_gettime");
 		exit( EXIT_FAILURE);
 	}
 
     for (i = 0; i < NUM_WORD_TESTS; i++) {
 		cPID = fork();
         if (cPID == -1) {
-            perror("Fork is sad");
+            perror("error during fork");
         }
 		if (cPID != 0) {
 			// this is the parent
@@ -140,14 +191,14 @@ int main(int argc, char** argv) {
 						}
 						double agentTime = (agentStop.tv_sec - absStart.tv_sec)
 										+ (agentStop.tv_nsec - absStart.tv_nsec) / ONE_BILLION;
-						printf("Child %d is done! It took %lf seconds\n", childID[i], agentTime); //TODO: have this output X.XX instead of X.000
+						printf("[Parent]: Child %d is done! It took %lf seconds\n", childID[i], agentTime); //TODO: have this output X.XX instead of X.000
 					} else if (cStatus < 0) {
 						perror("waitpid error");
 					}
 				}
 			}
 			if (!areAllDone(childState)) {
-				printf("Execution is still ongoing.\n");
+				printf("[Parent]: Execution is still ongoing.\n");
 				// printRacingSlugs(childID, childState);
 				sleep(1);
 			}
@@ -161,7 +212,7 @@ int main(int argc, char** argv) {
 		double raceTime = (raceStop.tv_sec  - absStart.tv_sec)
 						+ (raceStop.tv_nsec - absStart.tv_nsec) / ONE_BILLION;
 
-		printf("Execution over. It took %lf seconds\n", raceTime);
+		printf("[Parent]: Execution over. It took %lf seconds\n", raceTime);
 		exit(EXIT_SUCCESS);
 	}
     perror("This code shouldn't be reachable...");

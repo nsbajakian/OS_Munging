@@ -25,3 +25,6 @@ master: master.c
 .PHONY : clean
 clean:
 	rm -f $(OBJFILES) m8 m16 m32 m64 munge$(TARGET) *~
+superclean:
+	rm -f $(OBJFILES) m8 m16 m32 m64 munge$(TARGET) *.csv *~
+	
